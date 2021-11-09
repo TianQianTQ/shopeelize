@@ -1,0 +1,17 @@
+{
+  "name": "shopeelize",
+  "version": "1.0.0",
+  "description": "可以用于将嵌套对象范式化，或者将范式化的数据还原成嵌套对象",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.16.0",
+    "@babel/preset-env": "^7.16.0",
+    "babel-jest": "^27.3.1",
+    "jest": "^27.3.1"
+  }
+}
