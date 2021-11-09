@@ -19,6 +19,7 @@ const originalData = {
         }]
     }
 }
+// 范式化后的结果数据
 const normalizedData = {
     result: "123",
     entities: {
