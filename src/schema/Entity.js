@@ -1,15 +1,19 @@
-// 定义EntitySchema构造函数
-class EntitySchema {
-    // 参数处理
-    // name 该schema名称
-    // entityParams 为可选参数，定义该schema的外键，定义的外键可以不存在
-    // entityConfig 为可选参数，目前仅支持一个参数,定义该entity的主键，默认值为字符串'id'
+/**
+ * EntitySchema构造函数
+ * @params name 该schema名称
+ * @params entityParams 为可选参数，定义该schema的外键，定义的外键可以不存在
+ * @params entityConfig 为可选参数，目前仅支持一个参数,定义该entity的主键，默认值为字符串'id'
+ */
+export default class EntitySchema {
     constructor(name, entityParams = {}, entityConfig = {}) {
         this.name = name
         this.idAttribute = entityConfig.idAttribute || 'id'
-        this.inits(entityParams)
+        this.init(entityParams)
     }
-    // 处理参数嵌套
+    /**
+     * 处理参数嵌套
+     * @param {*} entityParams 
+     */
     init(entityParams) {
         if (!this.schema) {
             this.schema = {}

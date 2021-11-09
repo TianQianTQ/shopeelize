@@ -1,20 +1,32 @@
+const path = require('path');
+const webpack = require('webpack');
+
 module.exports = {
+    entry: './src/index.js',
+    output: {
+      filename: '[name]-boudle.js',
+      path: path.resolve(__dirname, 'dist')
+    },
     module: {
-      loaders: [
-        {exclude: ['node_modules'], loader: 'babel', test: /\.jsx?$/},
-      ],
+      rules: [{
+        test: /\.js/, //babel转化es6到es5
+        exclude: /node_modules/,
+        use: {
+          loader: "babel-loader",
+          options: {
+            plugins: ["@babel/plugin-transform-runtime"]
+          }
+        }
+      }]
     },
-    resolve: {
-      alias: {
-        config$: './configs/app-config.js',
-        react: './vendor/react-master',
-      },
-      extensions: ['', 'js', 'jsx'],
-      modules: [
-        'node_modules',
-        'bower_components',
-        'shared',
-        '/shared/vendor/modules',
-      ],
+    devServer: {
+      contentBase: path.resolve(__dirname, 'dist'),
+      hot: true,
+      historyApiFallback: true,
+      compress: true
     },
-  };
+    // plugins: {
+    //   HotModuleReplacementPlugin: new webpack.HotModuleReplacementPlugin()
+    // },
+    mode: 'development'
+};
