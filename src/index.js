@@ -1,5 +1,5 @@
-import { normalize, schema } from './schema'
-
+import { normalize, schema, denormalize } from './schema';
+/*
 const originalData = {
   "id": "123",
   "author":  {
@@ -22,14 +22,14 @@ const originalData = {
 const user = new schema.Entity('users', {}, {
   idAttribute: 'uid'
 })
-console.log('user:', user);
+// console.log('user:', user);
 
 // Define your comments schema
 const comment = new schema.Entity('comments', {
   commenter: user
 })
 
-console.log('comment:', comment);
+// console.log('comment:', comment);
 
 // Define your article
 const article = new schema.Entity('articles', {
@@ -39,7 +39,54 @@ const article = new schema.Entity('articles', {
   }
 })
 
-console.log('article:', article);
+// console.log('article:', article);
 
-const normalizedData = normalize(originalData, article)
-console.log('normalizedData', normalizedData);
+const normalizedData = normalize(originalData, article);
+const { result, entities } = normalizedData;
+const denormalizedData = denormalize(result, article, entities);
+console.log('denormalizedData: ', denormalizedData);
+*/
+
+const page = new schema.Entity('page', {})
+const user = new schema.Entity('user', {}, {})
+const book = new schema.Entity('book', {
+  pages: [ page ],
+  author: user
+})
+const comment = new schema.Entity('comments', {
+  commenter: user
+})
+const mybook = new schema.Entity('mybook', {
+  author: user,
+  books: [ book ],
+  comments: {
+    result: [ comment ]
+  }
+}, { idAttribute: 'customizedId' })
+
+// 对应的originalData:
+// 原始数据没有包含`books`字段
+const mybookOriginalData = {
+  customizedId: '666',
+  author: { id: '12345', name: 'uname' },
+  comments: {
+    total: 100,
+    result: [{
+        id: 'comment1',
+        commenter: {
+        id: '999',
+          name: 'Shopee' 
+        }
+      }, {
+        id: 'coment2',
+        commenter: {
+        id: '999',
+          name: 'Shopee' 
+        }
+    }]
+  }
+}
+
+const normalizedData = normalize(mybookOriginalData, mybook);
+// const { result, entities } = normalizedData;
+console.log(JSON.stringify(normalizedData));

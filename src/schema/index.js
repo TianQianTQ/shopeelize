@@ -7,6 +7,7 @@ import Entity from './Entity';
  * @param {*} addEntity 
  */
 const flatten = (value, schema, addEntity) => {
+    if (!value) return {};
     if (schema.getName) {
         return schemaNormalize(schema, value, flatten, addEntity);
     }
@@ -57,6 +58,7 @@ const noSchemaNormalize = (schema, data, flatten, addEntity) => {
     return obj;
 }
 
+
 /**
  * 递归添加属性
  * @param {*} entities 
@@ -77,12 +79,12 @@ const addEntities = (entities) => (schema, processedEntity) => {
  * @param {*} entities 
  * @returns object
  */
-// const getEntities = (entities) => {
-//     return (entityOrId, schema) => {
-//         const schemaName = schema.getName();
-//         return typeof entityOrId === 'object' ? entityOrId : entities[schemaName][entityOrId];
-//     }
-// }
+const getEntities = (entities) => {
+    return (entityOrId, schema) => {
+        const schemaName = schema.getName();
+        return typeof entityOrId === 'object' ? entityOrId : entities[schemaName][entityOrId];
+    }
+}
 
 /**
  * 针对不是schema实例的数据做拉平处理
@@ -91,21 +93,21 @@ const addEntities = (entities) => (schema, processedEntity) => {
  * @param {*} unflatten 
  * @returns 
  */
-// const unflattenNoEntity = (schema, data, unflatten) => {
-//     const obj = {...data};
-//     const arr = [];
-//     const arrFlag = Array.isArray(schema);
-//     Object.keys(schema).forEach((key) => {
-//         if (obj[key]) {
-//             obj[key] = unflatten(obj[key], schema[key]);
-//         }
-//         if (arrFlag) {
-//             arr.push(unflatten(obj[key], schema[key]))
-//         }
-//     })
-//     if (arrFlag) return arr;
-//     return obj;
-// } 
+const unflattenNoEntity = (schema, data, unflatten) => {
+    const obj = {...data};
+    const arr = [];
+    const arrFlag = Array.isArray(schema);
+    Object.keys(schema).forEach((key) => {
+        if (obj[key]) {
+            obj[key] = unflatten(obj[key], schema[key]);
+        }
+        if (arrFlag) {
+            arr.push(unflatten(obj[key], schema[key]))
+        }
+    })
+    if (arrFlag) return arr;
+    return obj;
+} 
 
 /**
  * 针对schema实例的数据做拉平处理
@@ -116,23 +118,23 @@ const addEntities = (entities) => (schema, processedEntity) => {
  * @param {*} cache 
  * @returns 
  */
-// const unflattenEntity = (schema, id, unflatten, getEntity, cache) => {
-//     const entity = getEntity(id, schema);
-//     if (!cache[schema.getName()]) {
-//         cache[schema.getName()] = {}
-//     }
-//     if (!cache[schema.getName()][id]) {
-//         const entityCopy = {...entity};
-//         Object.keys(schema.schema).forEach((key) => {
-//             if (entityCopy.hasOwnProperty(key)) {
-//                 const nextSchema = schema.schema[key];
-//                 entityCopy[key] = unflatten(entityCopy[key], nextSchema);
-//             }
-//         });
-//         cache[schema.getName()][id] = entityCopy;
-//     }
-//     return cache[schema.getName()][id];
-// }
+const unflattenEntity = (schema, id, unflatten, getEntity, cache) => {
+    const entity = getEntity(id, schema);
+    if (!cache[schema.getName()]) {
+        cache[schema.getName()] = {}
+    }
+    if (!cache[schema.getName()][id]) {
+        const entityCopy = {...entity};
+        Object.keys(schema.schema).forEach((key) => {
+            if (entityCopy.hasOwnProperty(key)) {
+                const nextSchema = schema.schema[key];
+                entityCopy[key] = unflatten(entityCopy[key], nextSchema);
+            }
+        });
+        cache[schema.getName()][id] = entityCopy;
+    }
+    return cache[schema.getName()][id];
+}
 
 
 /**
@@ -140,16 +142,16 @@ const addEntities = (entities) => (schema, processedEntity) => {
  * @param {*} entities 
  * @returns 返回按照不同类型对数据进行拉平处理的函数
  */
-// const getUnflatten = (entities) => {
-//     const cache = {};
-//     const getEntity = getEntities(entities);
-//     return function unflatten(data, schema) {
-//         if (!schema.getName) {
-//             return unflattenNoEntity(schema, data, unflatten);
-//         }
-//         return unflattenEntity(schema, data, unflatten, getEntity, cache);
-//     }
-// }
+const getUnflatten = (entities) => {
+    const cache = {};
+    const getEntity = getEntities(entities);
+    return function unflatten(data, schema) {
+        if (!schema.getName) {
+            return unflattenNoEntity(schema, data, unflatten);
+        }
+        return unflattenEntity(schema, data, unflatten, getEntity, cache);
+    }
+}
 
 
 // 定义暴露对象与构造方法
@@ -176,6 +178,6 @@ export const normalize = (data, entity) => {
  * @param {*} entity 同上文
  * @param {*} entities 范式化后的数据对象
  */
-// export const denormalize = (normalizedData, entity, entities) => {
-//     return getUnflatten(entities)(normalizedData,entity);
-// }
+export const denormalize = (normalizedData, entity, entities) => {
+    return getUnflatten(entities)(normalizedData,entity);
+}
