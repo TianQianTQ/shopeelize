@@ -1,4 +1,4 @@
-import Entity from './Entity';
+import EntitySchema from './Entity';
 
 /**
  * 根据schema类型处理
@@ -7,7 +7,7 @@ import Entity from './Entity';
  * @param {*} addEntity 
  */
 const flatten = (value, schema, addEntity) => {
-    if (!value) return {};
+    if (typeof value !== 'object' || !value) return value;
     if (schema.getName) {
         return schemaNormalize(schema, value, flatten, addEntity);
     }
@@ -67,7 +67,7 @@ const noSchemaNormalize = (schema, data, flatten, addEntity) => {
 const addEntities = (entities) => (schema, processedEntity) => {
     const schemaName = schema.getName();
     const schemaId = schema.getId(processedEntity);
-    if (!entities[schemaName]) {
+    if (!(schemaName in entities)) {
         entities[schemaName] = {}
     }
     const entity = entities[schemaName][schemaId] || {}
@@ -82,7 +82,10 @@ const addEntities = (entities) => (schema, processedEntity) => {
 const getEntities = (entities) => {
     return (entityOrId, schema) => {
         const schemaName = schema.getName();
-        return typeof entityOrId === 'object' ? entityOrId : entities[schemaName][entityOrId];
+        if (typeof entityOrId === 'object') {
+            return entityOrId;
+        }
+        return entities[schemaName] && entities[schemaName][entityOrId];
     }
 }
 
@@ -120,6 +123,9 @@ const unflattenNoEntity = (schema, data, unflatten) => {
  */
 const unflattenEntity = (schema, id, unflatten, getEntity, cache) => {
     const entity = getEntity(id, schema);
+    if (typeof entity !== 'object' || !entity) {
+        return entity;
+    }
     if (!cache[schema.getName()]) {
         cache[schema.getName()] = {}
     }
@@ -146,17 +152,18 @@ const getUnflatten = (entities) => {
     const cache = {};
     const getEntity = getEntities(entities);
     return function unflatten(data, schema) {
-        if (!schema.getName) {
-            return unflattenNoEntity(schema, data, unflatten);
+        if (!data) return data;
+        if (schema instanceof EntitySchema) {
+            return unflattenEntity(schema, data, unflatten, getEntity, cache);
         }
-        return unflattenEntity(schema, data, unflatten, getEntity, cache);
+        return unflattenNoEntity(schema, data, unflatten);
     }
 }
 
 
 // 定义暴露对象与构造方法
 export const schema = {
-    Entity
+    Entity: EntitySchema,
 };
 
 /**
@@ -165,7 +172,9 @@ export const schema = {
  * @param {*} entity Entity实例，代表schema，当表示方式为[entity]时则表示该schema为符合entity结构的对象组成的数组
  */
 export const normalize = (data, entity) => {
-    // 符合定义的对象 或 对象组成的数组
+    if (!data || typeof data !== 'object') {
+        throw new Error('The input data type is wrong');
+    }
     const entities = {}
     const addEntity = addEntities(entities)
     const result = flatten(data, entity, addEntity);
@@ -179,5 +188,7 @@ export const normalize = (data, entity) => {
  * @param {*} entities 范式化后的数据对象
  */
 export const denormalize = (normalizedData, entity, entities) => {
-    return getUnflatten(entities)(normalizedData,entity);
+    if (normalizedData) {
+        return getUnflatten(entities)(normalizedData,entity);
+    }
 }
