@@ -11,6 +11,7 @@ module.exports = {
       rules: [{
         test: /\.js/, //babel转化es6到es5
         exclude: /node_modules/,
+        include: path.resolve(__dirname, 'src'),
         use: {
           loader: "babel-loader",
           options: {
@@ -23,10 +24,11 @@ module.exports = {
       contentBase: path.resolve(__dirname, 'dist'),
       hot: true,
       historyApiFallback: true,
-      compress: true
+      compress: true,
     },
-    // plugins: {
-    //   HotModuleReplacementPlugin: new webpack.HotModuleReplacementPlugin()
-    // },
+    plugins: [
+      new webpack.HotModuleReplacementPlugin(),
+      new webpack.NamedModulesPlugin(),
+    ],
     mode: 'development'
 };
