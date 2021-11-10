@@ -9,19 +9,18 @@ import EntitySchema from './EntitySchema';
 const flatten = (value, schema, addEntity) => {
     if (typeof value !== 'object' || !value) return value;
     if (schema.getName) {
-        return schemaNormalize(schema, value, flatten, addEntity);
+        return schemaNormalize(schema, value, addEntity);
     }
-    return noSchemaNormalize(schema, value, flatten, addEntity);
+    return noSchemaNormalize(schema, value, addEntity);
 }
 
 /**
  * schema实例 递归 处理
  * @param {*} schema 
  * @param {*} data 
- * @param {*} flatten 
  * @param {*} addEntity 
  */
-const schemaNormalize = (schema, data, flatten, addEntity) => {
+const schemaNormalize = (schema, data, addEntity) => {
     const processedEntity = { ...data };
     const currentSchema = schema;
     Object.keys(currentSchema.schema).forEach((key) => {
@@ -37,15 +36,14 @@ const schemaNormalize = (schema, data, flatten, addEntity) => {
  * 非schema实例 按类型（对象或数组）处理
  * @param {*} schema 
  * @param {*} data 
- * @param {*} flatten 
  * @param {*} addEntity
  * @returns arr or obj
  */
-const noSchemaNormalize = (schema, data, flatten, addEntity) => {
+const noSchemaNormalize = (schema, data, addEntity) => {
     const obj = { ...data }
     const arrFlag = Array.isArray(schema);
     if (arrFlag) {
-        return arrayNormalize(schema, data, flatten, addEntity);
+        return arrayNormalize(schema, data, addEntity);
     }
     Object.keys(schema).forEach((key) => {
         const nextSchema = schema[key];
@@ -83,11 +81,10 @@ const getValues = (input) => (Array.isArray(input) ? input : Object.keys(input).
  * 处理schema为数组的情况
  * @param {*} schema 
  * @param {*} data 
- * @param {*} flatten 
  * @param {*} addEntity 
  * @returns 
  */
-const arrayNormalize = (schema, data, flatten, addEntity) => {
+const arrayNormalize = (schema, data, addEntity) => {
     schema = validateSchema(schema);
     const values = getValues(data);
     return values.map((value) => flatten(value, schema, addEntity));
@@ -105,13 +102,8 @@ const addEntities = (entities) => (schema, processedEntity) => {
     if (!(schemaName in entities)) {
         entities[schemaName] = {}
     }
-    const entity = entities[schemaName][schemaId]
-    if (entity) {
-        entities[schemaName][schemaId] = Object.assign(entity, processedEntity);
-    } else {
-        entities[schemaName][schemaId] = processedEntity;
-    }
-    // entities[schemaName][schemaId] = Object.assign(entity, processedEntity);
+    const entity = entities[schemaName][schemaId] || {}
+    entities[schemaName][schemaId] = Object.assign(entity, processedEntity);
 }
 
 /**
@@ -129,6 +121,13 @@ const getEntities = (entities) => {
     }
 }
 
+/**
+ * 针对数组非范式化处理
+ * @param {*} schema 
+ * @param {*} data 
+ * @param {*} unflatten 
+ * @returns 
+ */
 const arrayDenormalize = (schema, data, unflatten) => {
     schema = validateSchema(schema);
     return data && data.map ? data.map((entityOrId) => unflatten(entityOrId, schema)) : data;
@@ -185,7 +184,6 @@ const unflattenEntity = (schema, id, unflatten, getEntity, cache) => {
     return cache[schema.getName()][id];
 }
 
-
 /**
  * 获取反范式化结果
  * @param {*} entities 
@@ -202,7 +200,6 @@ const getUnflatten = (entities) => {
         return unflattenNoEntity(schema, data, unflatten);
     }
 }
-
 
 // 定义暴露对象与构造方法
 export const schema = {
