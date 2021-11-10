@@ -1,4 +1,4 @@
-import EntitySchema from './Entity';
+import EntitySchema from './EntitySchema';
 
 /**
  * 根据schema类型处理
@@ -22,7 +22,7 @@ const flatten = (value, schema, addEntity) => {
  * @param {*} addEntity 
  */
 const schemaNormalize = (schema, data, flatten, addEntity) => {
-    const processedEntity = {...data};
+    const processedEntity = { ...data };
     const currentSchema = schema;
     Object.keys(currentSchema.schema).forEach((key) => {
         const schema = currentSchema.schema[key];
@@ -43,19 +43,54 @@ const schemaNormalize = (schema, data, flatten, addEntity) => {
  */
 const noSchemaNormalize = (schema, data, flatten, addEntity) => {
     const obj = { ...data }
-    const arr = []
     const arrFlag = Array.isArray(schema);
+    if (arrFlag) {
+        return arrayNormalize(schema, data, flatten, addEntity);
+    }
     Object.keys(schema).forEach((key) => {
         const nextSchema = schema[key];
         const value = flatten(data[key], nextSchema, addEntity);
-        if (arrFlag) {
-            arr.push(value);
+        if (!value) {
+            delete obj[key];
         } else {
             obj[key] = value;
         }
     })
-    if (arrFlag) return arr;
     return obj;
+}
+
+/**
+ * 验证schema 取数组中第一个值
+ * @param {*} definition 
+ * @returns 
+ */
+const validateSchema = (definition) => {
+    const isArray = Array.isArray(definition);
+    if (isArray && definition.length > 1) {
+        throw new Error(`Expected schema definition to be a single schema, but found ${definition.length}.`);
+    }
+    return definition[0];
+};
+
+/**
+ * 获取数组形式的values
+ * @param {*} input 
+ * @returns 
+ */
+const getValues = (input) => (Array.isArray(input) ? input : Object.keys(input).map((key) => input[key]));
+
+/**
+ * 处理schema为数组的情况
+ * @param {*} schema 
+ * @param {*} data 
+ * @param {*} flatten 
+ * @param {*} addEntity 
+ * @returns 
+ */
+const arrayNormalize = (schema, data, flatten, addEntity) => {
+    schema = validateSchema(schema);
+    const values = getValues(data);
+    return values.map((value) => flatten(value, schema, addEntity));
 }
 
 
@@ -70,8 +105,13 @@ const addEntities = (entities) => (schema, processedEntity) => {
     if (!(schemaName in entities)) {
         entities[schemaName] = {}
     }
-    const entity = entities[schemaName][schemaId] || {}
-    entities[schemaName][schemaId] = Object.assign(entity, processedEntity);
+    const entity = entities[schemaName][schemaId]
+    if (entity) {
+        entities[schemaName][schemaId] = Object.assign(entity, processedEntity);
+    } else {
+        entities[schemaName][schemaId] = processedEntity;
+    }
+    // entities[schemaName][schemaId] = Object.assign(entity, processedEntity);
 }
 
 /**
@@ -89,6 +129,11 @@ const getEntities = (entities) => {
     }
 }
 
+const arrayDenormalize = (schema, data, unflatten) => {
+    schema = validateSchema(schema);
+    return data && data.map ? data.map((entityOrId) => unflatten(entityOrId, schema)) : data;
+};
+
 /**
  * 针对不是schema实例的数据做拉平处理
  * @param {*} schema 
@@ -97,20 +142,18 @@ const getEntities = (entities) => {
  * @returns 
  */
 const unflattenNoEntity = (schema, data, unflatten) => {
-    const obj = {...data};
-    const arr = [];
+    const obj = { ...data };
     const arrFlag = Array.isArray(schema);
+    if (arrFlag) {
+        return arrayDenormalize(schema, data, unflatten);
+    }
     Object.keys(schema).forEach((key) => {
         if (obj[key]) {
             obj[key] = unflatten(obj[key], schema[key]);
         }
-        if (arrFlag) {
-            arr.push(unflatten(obj[key], schema[key]))
-        }
     })
-    if (arrFlag) return arr;
     return obj;
-} 
+}
 
 /**
  * 针对schema实例的数据做拉平处理
@@ -130,7 +173,7 @@ const unflattenEntity = (schema, id, unflatten, getEntity, cache) => {
         cache[schema.getName()] = {}
     }
     if (!cache[schema.getName()][id]) {
-        const entityCopy = {...entity};
+        const entityCopy = { ...entity };
         Object.keys(schema.schema).forEach((key) => {
             if (entityCopy.hasOwnProperty(key)) {
                 const nextSchema = schema.schema[key];
@@ -189,6 +232,6 @@ export const normalize = (data, entity) => {
  */
 export const denormalize = (normalizedData, entity, entities) => {
     if (normalizedData) {
-        return getUnflatten(entities)(normalizedData,entity);
+        return getUnflatten(entities)(normalizedData, entity);
     }
 }

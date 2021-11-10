@@ -169,3 +169,4 @@ const mybookOriginalData = {
 使用Jest完成单元测试，用例设计合理，覆盖完整 - 20分
 代码风格遵循standardjs规范， 有必要的注释，结构清晰，实现优雅 - 20分
 */
+

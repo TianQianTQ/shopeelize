@@ -6,15 +6,18 @@
  */
 export default class EntitySchema {
     constructor(name, entityParams = {}, entityConfig = {}) {
+        if (!name || typeof name !== 'string') {
+            throw new Error(`Expected a string key for Entity, but found ${key}.`);
+        }
         this.name = name
         this.idAttribute = entityConfig.idAttribute || 'id'
-        this.init(entityParams)
+        this.define(entityParams)
     }
     /**
-     * 处理参数嵌套
+     * 遍历当前schema中的entityParams，处理嵌套
      * @param {*} entityParams 
      */
-    init(entityParams) {
+    define(entityParams) {
         if (!this.schema) {
             this.schema = {}
         }
