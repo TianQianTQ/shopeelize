@@ -1,4 +1,4 @@
-/*Software Engineer, Frontend, Entry Task 1（Normalize）
+/*
 
 实现一个库shopeelize，可以用于将嵌套对象范式化，或者将范式化的数据还原成嵌套对象。
 
@@ -16,7 +16,7 @@ entityParams为可选参数，定义该schema的外键，定义的外键可以�
 entityConfig为可选参数，目前仅支持一个参数
 entityConfig，定义该entity的主键，默认值为字符串'id'
 
-`	
+
 normalize(data, entity)
  
 参数说明
@@ -168,6 +168,4 @@ const mybookOriginalData = {
 正确实现denormalize函数功能 - 30分
 使用Jest完成单元测试，用例设计合理，覆盖完整 - 20分
 代码风格遵循standardjs规范， 有必要的注释，结构清晰，实现优雅 - 20分
-
-若 entry task 不及格，将不能通过试用期。
 */

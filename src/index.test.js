@@ -1,5 +1,8 @@
 import { normalize, schema, denormalize } from './schema';
 
+/**
+ * 测试用例一
+ */
 // 原始数据
 const originalData = {
     "id": "123",
@@ -60,13 +63,63 @@ const article = new schema.Entity('articles', {
         result: [comment]
     }
 })
-test('test: originalData to normalizedData', () => {
+test('test1: originalData to normalizedData', () => {
     const res = normalize(originalData, article);
     expect(res).toEqual(normalizedData);
 })
-test('test: normalizedData to originalData', () => {
+test('test1: normalizedData to originalData', () => {
     const res = normalize(originalData, article);
     const { result, entities } = res;
     const denormalizedData = denormalize(result, article, entities);
     expect(denormalizedData).toEqual(originalData);
+})
+
+/**
+ * 测试用例二
+ */
+const page = new schema.Entity('page', {})
+const user2 = new schema.Entity('user', {}, {})
+const book = new schema.Entity('book', {
+  pages: [ page ],
+  author: user2
+})
+const comment2 = new schema.Entity('comments', {
+  commenter: user2
+})
+const mybook = new schema.Entity('mybook', {
+  author: user2,
+  books: [ book ],
+  comments: {
+    result: [ comment2 ]
+  }
+}, { idAttribute: 'customizedId' })
+
+// 对应的originalData:
+// 原始数据没有包含`books`字段
+const mybookOriginalData = {
+  customizedId: '666',
+  author: { id: '12345', name: 'uname' },
+  comments: {
+    total: 100,
+    result: [{
+        id: 'comment1',
+        commenter: {
+        id: '999',
+          name: 'Shopee' 
+        }
+      }, {
+        id: 'coment2',
+        commenter: {
+        id: '999',
+          name: 'Shopee' 
+        }
+    }]
+  }
+}
+
+
+test('test2: ', () => {
+    const { result, entities  } = normalize(mybookOriginalData, mybook);
+    const unflattenRes = denormalize(result, mybook, entities);
+    expect(unflattenRes).toEqual(mybookOriginalData);
 })
